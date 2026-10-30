@@ -1,0 +1,1573 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <title>GyanSarthi - Education & Learning Platform Hub</title>
+  
+  <!-- PWA Primary Meta Tags -->
+  <meta name="theme-color" content="#0B0F19">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Dynamic educational platform catalog, study batches, and learning launcher portal">
+  
+  <!-- Web App Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  
+  <!-- Favicons & Touch Icons -->
+  <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  
+  <!-- iOS Safari PWA Capabilities -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GyanSarthi">
+  <meta name="format-detection" content="telephone=no">
+  
+  <!-- Windows Tile -->
+  <meta name="msapplication-TileColor" content="#0B0F19">
+  <meta name="msapplication-TileImage" content="/icons/icon-192.png">
+
+  <!-- Tailwind CSS & Google Fonts -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          },
+          colors: {
+            brandDark: '#0B0F19',
+            brandSurface: '#121A2D',
+            brandCard: '#1A243D',
+            brandCardHover: '#233152',
+            brandBorder: '#2A3B5F',
+            brandCyan: '#38BDF8',
+            brandIndigo: '#818CF8',
+            brandAmber: '#F59E0B',
+            brandEmerald: '#10B981',
+            brandRose: '#F43F5E'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * {
+      -webkit-tap-highlight-color: transparent;
+      box-sizing: border-box;
+    }
+    body {
+      background-color: #0B0F19;
+      color: #F8FAFC;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    .safe-top {
+      padding-top: max(env(safe-area-inset-top), 0.75rem);
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #2A3B5F;
+      border-radius: 9999px;
+    }
+    .glass-header {
+      background: rgba(18, 26, 45, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    .glow-cyan {
+      box-shadow: 0 0 25px -5px rgba(56, 189, 248, 0.25);
+    }
+    .glow-hover:hover {
+      box-shadow: 0 10px 30px -10px rgba(56, 189, 248, 0.3);
+    }
+    /* In-App Viewer Modal Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.98); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .animate-modal {
+      animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+  </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+  <!-- Network & Offline Status Banner -->
+  <div id="offlineBar" class="hidden bg-amber-500/90 text-slate-950 px-4 py-2 text-xs font-bold text-center flex items-center justify-center gap-2 transition-all duration-300 z-50">
+    <span>⚠️ You are currently offline. GyanSarthi PWA is running from local cache.</span>
+    <button onclick="window.location.reload()" class="bg-black/20 hover:bg-black/30 px-2.5 py-0.5 rounded text-[11px] underline">Retry</button>
+  </div>
+
+  <!-- PWA Install Floating/Top Banner (shown when installable) -->
+  <div id="pwaInstallBanner" class="hidden bg-gradient-to-r from-brandCard via-brandSurface to-brandCard border-b border-brandCyan/40 px-4 py-3 z-40 transition-all shadow-xl">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <img src="/icons/icon-192.png" alt="GyanSarthi" class="w-10 h-10 rounded-xl shadow border border-brandBorder">
+        <div>
+          <div class="flex items-center gap-2">
+            <h4 class="text-xs sm:text-sm font-bold text-white">Install GyanSarthi Progressive Web App</h4>
+            <span class="text-[10px] bg-brandCyan/20 text-brandCyan border border-brandCyan/30 px-1.5 py-0.5 rounded font-mono">PWA</span>
+          </div>
+          <p class="text-[11px] text-slate-400">Add to home screen for fullscreen launcher, instant launch & offline access.</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 w-full sm:w-auto">
+        <button id="bannerInstallBtn" class="flex-1 sm:flex-none bg-brandCyan hover:bg-sky-400 text-slate-950 font-bold text-xs px-4 py-2 rounded-xl transition flex items-center justify-center gap-1.5 shadow-lg shadow-cyan-500/25">
+          <span>📲 Install App</span>
+        </button>
+        <button id="bannerDismissBtn" class="text-slate-400 hover:text-white text-xs px-2.5 py-2 rounded-xl transition">
+          ✕
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- App Header -->
+  <header class="glass-header border-b border-brandBorder sticky top-0 z-30 safe-top px-4 lg:px-8 pb-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <!-- App Brand Logo -->
+      <a href="/" class="flex items-center gap-3 group">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brandCyan via-sky-400 to-brandIndigo p-0.5 shadow-lg shadow-cyan-500/20 group-hover:scale-105 transition-transform duration-200">
+          <img src="/icons/icon-192.png" alt="GyanSarthi Logo" class="w-full h-full object-cover rounded-[10px]" onerror="this.src='/favicon.png'">
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-lg font-extrabold tracking-tight text-white group-hover:text-brandCyan transition-colors">GyanSarthi</span>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-brandCyan/15 text-brandCyan border border-brandCyan/30 tracking-wider">PWA</span>
+          </div>
+          <p class="text-[11px] text-slate-400 font-medium">Educational Platform Catalog & Launcher</p>
+        </div>
+      </a>
+    </div>
+
+    <!-- Header Right Controls -->
+    <div class="flex items-center gap-2 sm:gap-3">
+      <!-- Live Sync / Offline Pill -->
+      <div id="syncStatusBadge" class="hidden md:flex items-center gap-1.5 text-[11px] bg-emerald-950/60 text-emerald-400 border border-emerald-800/50 px-2.5 py-1 rounded-full">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span id="syncStatusText">Live Sync</span>
+      </div>
+
+      <!-- Quick Install Button in Header -->
+      <button id="headerInstallBtn" class="hidden text-xs bg-brandCyan/15 hover:bg-brandCyan/25 text-brandCyan border border-brandCyan/40 px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5">
+        <span>📲 Install PWA</span>
+      </button>
+
+      <!-- Admin Dashboard Toggle Button -->
+      <button id="openAdminBtn" title="Admin Portal" class="text-xs bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-brandBorder px-3 py-1.5 rounded-xl font-medium transition flex items-center gap-1.5">
+        <span>⚙️</span>
+        <span class="hidden sm:inline">Admin</span>
+      </button>
+
+      <!-- Standalone Mode Indicator -->
+      <div id="standaloneBadge" class="hidden items-center gap-1 text-[11px] bg-brandIndigo/20 text-brandIndigo border border-brandIndigo/30 px-2.5 py-1 rounded-full">
+        <span>📱 App Mode</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs (Home, Platforms, Upcoming, Favorites, Admin) -->
+  <nav class="bg-brandDark/90 border-b border-brandBorder px-4 lg:px-8 py-2 sticky top-[65px] z-20 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+      <div class="flex items-center gap-1 sm:gap-2 overflow-x-auto custom-scroll py-1" id="mainNavTabs">
+        <button class="nav-tab active text-xs sm:text-sm font-semibold px-3.5 py-1.5 rounded-xl bg-brandCyan text-slate-950 transition flex items-center gap-1.5" data-tab="home">
+          <span>🏠</span> Home
+        </button>
+        <button class="nav-tab text-xs sm:text-sm font-medium px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-brandCard transition flex items-center gap-1.5" data-tab="platforms">
+          <span>📚</span> Platforms (<span id="platformsCountBadge">0</span>)
+        </button>
+        <button class="nav-tab text-xs sm:text-sm font-medium px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-brandCard transition flex items-center gap-1.5" data-tab="upcoming">
+          <span>⏳</span> Upcoming (<span id="upcomingCountBadge">0</span>)
+        </button>
+        <button class="nav-tab text-xs sm:text-sm font-medium px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-brandCard transition flex items-center gap-1.5" data-tab="favorites">
+          <span>⭐</span> Bookmarks (<span id="favCountBadge">0</span>)
+        </button>
+      </div>
+
+      <!-- Quick Search Toggle / Input on wide screens -->
+      <div class="relative w-44 sm:w-64">
+        <input id="quickSearchInput" type="text" placeholder="Quick search..."
+          class="w-full bg-brandSurface border border-brandBorder rounded-xl pl-8 pr-7 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brandCyan transition">
+        <span class="absolute left-2.5 top-2 text-slate-500 text-xs">🔍</span>
+        <button id="clearSearchBtn" class="hidden absolute right-2 top-2 text-slate-500 hover:text-white text-xs">✕</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Body Content Area -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+
+    <!-- TAB 1: HOME VIEW -->
+    <div id="tabHome" class="tab-content space-y-6">
+
+      <!-- Hero Banner Carousel / Featured Highlight -->
+      <section class="relative rounded-3xl overflow-hidden border border-brandBorder/80 bg-gradient-to-br from-brandSurface to-brandCard shadow-2xl">
+        <div class="absolute inset-0 z-0 opacity-30 bg-center bg-cover" style="background-image: url('/assets/hero.jpg');"></div>
+        <div class="absolute inset-0 bg-gradient-to-r from-brandDark via-brandDark/90 to-transparent z-0"></div>
+
+        <div class="relative z-10 p-6 sm:p-8 lg:p-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div class="max-w-xl space-y-3">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brandCyan/15 border border-brandCyan/30 text-brandCyan text-xs font-bold uppercase tracking-wider">
+              <span>🚀</span> PWA Learning Ecosystem
+            </div>
+            <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-tight">
+              Access All Your Learning Batches in One High-Speed Hub
+            </h2>
+            <p class="text-sm text-slate-300 leading-relaxed">
+              Launch online study portals, interactive classroom video lessons, test series, and comprehensive course trackers instantly without manual typing or APK delays.
+            </p>
+            <div class="pt-2 flex flex-wrap items-center gap-3">
+              <button onclick="switchTab('platforms')" class="bg-brandCyan hover:bg-sky-400 text-slate-950 font-bold text-xs sm:text-sm px-5 py-2.5 rounded-xl transition flex items-center gap-2 shadow-lg shadow-cyan-500/25">
+                <span>📚 Explore Catalog</span>
+              </button>
+              <button onclick="openFirstPlatform()" class="bg-brandSurface hover:bg-brandCard text-white font-semibold text-xs sm:text-sm px-4 py-2.5 rounded-xl border border-brandBorder transition flex items-center gap-2">
+                <span>⚡ Quick Launch Top Portal</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Quick Metrics Card -->
+          <div class="grid grid-cols-2 gap-3 w-full md:w-auto">
+            <div class="bg-brandDark/80 border border-brandBorder rounded-2xl p-4 text-center backdrop-blur">
+              <div id="heroActivePortals" class="text-2xl font-black text-brandCyan">0</div>
+              <div class="text-[11px] text-slate-400 font-medium uppercase tracking-wider mt-1">Active Portals</div>
+            </div>
+            <div class="bg-brandDark/80 border border-brandBorder rounded-2xl p-4 text-center backdrop-blur">
+              <div id="heroCategories" class="text-2xl font-black text-brandIndigo">0</div>
+              <div class="text-[11px] text-slate-400 font-medium uppercase tracking-wider mt-1">Categories</div>
+            </div>
+            <div class="bg-brandDark/80 border border-brandBorder rounded-2xl p-4 text-center backdrop-blur col-span-2">
+              <div class="flex items-center justify-center gap-2 text-xs font-semibold text-emerald-400">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                <span>Firestore Cloud Sync Active</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Category Navigation Filter Bar -->
+      <div class="space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+            <span>🏷️</span> Browse by Category
+          </h3>
+          <span class="text-xs text-slate-400" id="filterStatusLabel">Showing all platforms</span>
+        </div>
+        <div class="flex items-center gap-2 overflow-x-auto custom-scroll pb-1" id="categoryChipsContainer">
+          <!-- Dynamically populated category chips -->
+          <button class="cat-chip active text-xs font-semibold px-4 py-2 rounded-xl bg-brandCyan text-slate-950 transition" data-category="ALL">All Categories</button>
+          <button class="cat-chip text-xs font-medium px-4 py-2 rounded-xl bg-brandSurface text-slate-400 hover:text-white border border-brandBorder transition" data-category="Education">Education</button>
+          <button class="cat-chip text-xs font-medium px-4 py-2 rounded-xl bg-brandSurface text-slate-400 hover:text-white border border-brandBorder transition" data-category="Study">Study</button>
+          <button class="cat-chip text-xs font-medium px-4 py-2 rounded-xl bg-brandSurface text-slate-400 hover:text-white border border-brandBorder transition" data-category="Courses">Courses</button>
+        </div>
+      </div>
+
+      <!-- Featured / Top Platforms Grid -->
+      <div class="space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+            <span>⭐</span> Featured Portals
+          </h3>
+          <button onclick="switchTab('platforms')" class="text-xs text-brandCyan hover:underline font-semibold">
+            View All →
+          </button>
+        </div>
+
+        <div id="homeFeaturedGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Dynamically populated cards -->
+        </div>
+      </div>
+
+      <!-- PWA Offline Feature Highlights -->
+      <section class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+        <div class="bg-brandSurface/60 border border-brandBorder rounded-2xl p-5 space-y-2">
+          <div class="w-9 h-9 rounded-xl bg-brandCyan/20 text-brandCyan flex items-center justify-center text-lg">⚡</div>
+          <h4 class="text-sm font-bold text-white">Instant Launch</h4>
+          <p class="text-xs text-slate-400">Launch learning portals within seconds in an embedded web viewer or native browser tab.</p>
+        </div>
+        <div class="bg-brandSurface/60 border border-brandBorder rounded-2xl p-5 space-y-2">
+          <div class="w-9 h-9 rounded-xl bg-brandIndigo/20 text-brandIndigo flex items-center justify-center text-lg">📦</div>
+          <h4 class="text-sm font-bold text-white">Full Offline Support</h4>
+          <p class="text-xs text-slate-400">Service workers cache the app shell and catalog so you can browse even without an internet connection.</p>
+        </div>
+        <div class="bg-brandSurface/60 border border-brandBorder rounded-2xl p-5 space-y-2">
+          <div class="w-9 h-9 rounded-xl bg-brandEmerald/20 text-brandEmerald flex items-center justify-center text-lg">🔄</div>
+          <h4 class="text-sm font-bold text-white">Real-Time Firestore Sync</h4>
+          <p class="text-xs text-slate-400">New platforms and announcements update dynamically across all user devices in real time.</p>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- TAB 2: PLATFORMS VIEW -->
+    <div id="tabPlatforms" class="tab-content hidden space-y-6">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-brandBorder">
+        <div>
+          <h2 class="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
+            <span>📚</span> Platform Directory
+          </h2>
+          <p class="text-xs text-slate-400 mt-1">Browse, search, launch, and download study applications.</p>
+        </div>
+
+        <div class="flex items-center gap-2 w-full sm:w-auto">
+          <!-- Sort Selector -->
+          <select id="sortSelect" class="bg-brandSurface border border-brandBorder rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brandCyan">
+            <option value="order">Sort: Recommended Order</option>
+            <option value="name">Sort: Name (A-Z)</option>
+            <option value="category">Sort: Category</option>
+          </select>
+
+          <!-- Refresh Button -->
+          <button id="refreshPlatformsBtn" title="Refresh from Firestore" class="bg-brandSurface hover:bg-brandCard text-slate-300 border border-brandBorder p-2 rounded-xl transition">
+            🔄
+          </button>
+        </div>
+      </div>
+
+      <!-- Platforms Grid -->
+      <div id="platformsCatalogGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Rendered items injected here -->
+      </div>
+
+      <!-- Empty State -->
+      <div id="platformsEmptyState" class="hidden text-center py-16 bg-brandSurface border border-brandBorder rounded-2xl p-8 space-y-3">
+        <span class="text-4xl">🔍</span>
+        <h4 class="text-base font-bold text-white">No platforms found</h4>
+        <p class="text-xs text-slate-400 max-w-sm mx-auto">Try adjusting your category filter or search query. You can also seed initial platforms from the Admin Portal.</p>
+        <button onclick="resetFilters()" class="text-xs bg-brandCyan hover:bg-sky-400 text-slate-950 font-bold px-4 py-2 rounded-xl transition">
+          Clear Filters
+        </button>
+      </div>
+    </div>
+
+    <!-- TAB 3: UPCOMING VIEW -->
+    <div id="tabUpcoming" class="tab-content hidden space-y-6">
+      <div class="pb-4 border-b border-brandBorder">
+        <h2 class="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
+          <span>⏳</span> Upcoming Platforms & Batches
+        </h2>
+        <p class="text-xs text-slate-400 mt-1">New education tools and course batches coming soon to GyanSarthi.</p>
+      </div>
+
+      <div id="upcomingPlatformsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Upcoming platform cards -->
+      </div>
+
+      <div id="upcomingEmptyState" class="hidden text-center py-16 bg-brandSurface border border-brandBorder rounded-2xl p-8 space-y-3">
+        <span class="text-4xl">📅</span>
+        <h4 class="text-base font-bold text-white">No upcoming platforms right now</h4>
+        <p class="text-xs text-slate-400">All current educational portals are live and active!</p>
+      </div>
+    </div>
+
+    <!-- TAB 4: BOOKMARKS / FAVORITES VIEW -->
+    <div id="tabFavorites" class="tab-content hidden space-y-6">
+      <div class="pb-4 border-b border-brandBorder flex items-center justify-between">
+        <div>
+          <h2 class="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
+            <span>⭐</span> Your Bookmarked Portals
+          </h2>
+          <p class="text-xs text-slate-400 mt-1">Quick access to your most frequently used learning destinations.</p>
+        </div>
+        <button id="clearAllFavsBtn" class="text-xs text-rose-400 hover:text-rose-300 transition">
+          Clear All
+        </button>
+      </div>
+
+      <div id="favoritesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Rendered favorite cards -->
+      </div>
+
+      <div id="favoritesEmptyState" class="hidden text-center py-16 bg-brandSurface border border-brandBorder rounded-2xl p-8 space-y-3">
+        <span class="text-4xl">⭐</span>
+        <h4 class="text-base font-bold text-white">No bookmarks saved yet</h4>
+        <p class="text-xs text-slate-400">Click the star icon on any platform card to pin it here for quick access.</p>
+        <button onclick="switchTab('platforms')" class="text-xs bg-brandCyan hover:bg-sky-400 text-slate-950 font-bold px-4 py-2 rounded-xl transition">
+          Browse Platforms
+        </button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- BUILT-IN IN-APP WEB VIEWER MODAL (Full Screen Browser Emulator) -->
+  <div id="inAppViewerModal" class="fixed inset-0 z-50 bg-brandDark/95 backdrop-blur-md hidden flex flex-col">
+    <!-- Browser Top Bar -->
+    <div class="bg-brandSurface border-b border-brandBorder safe-top px-4 py-2.5 flex items-center justify-between gap-3 shadow-lg">
+      <div class="flex items-center gap-2 min-w-0">
+        <button id="closeViewerBtn" class="text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+          <span>✕</span> Close
+        </button>
+        <button id="reloadViewerBtn" title="Reload iframe" class="text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700 p-1.5 rounded-xl text-xs transition">
+          🔄
+        </button>
+        <div class="truncate text-left pl-2">
+          <span id="viewerPlatformName" class="text-xs font-bold text-white truncate block">Platform Name</span>
+          <span id="viewerPlatformUrl" class="text-[11px] text-slate-400 font-mono truncate block">https://...</span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <button id="openExternalViewerBtn" class="bg-brandCyan hover:bg-sky-400 text-slate-950 font-bold text-xs px-3.5 py-1.5 rounded-xl transition flex items-center gap-1.5 shadow-md shadow-cyan-500/20">
+          <span>↗ Open in Browser</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Viewer Body Frame -->
+    <div class="flex-1 relative bg-slate-950 w-full overflow-hidden">
+      <!-- Loading indicator -->
+      <div id="viewerLoadingSpinner" class="absolute inset-0 flex flex-col items-center justify-center bg-brandDark text-slate-400 gap-3 z-10">
+        <div class="w-10 h-10 border-4 border-slate-700 border-t-brandCyan rounded-full animate-spin"></div>
+        <p class="text-xs">Loading educational portal...</p>
+      </div>
+
+      <!-- Iframe -->
+      <iframe id="viewerIframe" src="about:blank" class="w-full h-full border-0" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-downloads allow-modals" allow="autoplay; fullscreen; clipboard-read; clipboard-write"></iframe>
+
+      <!-- Fallback notification if iframe is blocked by X-Frame-Options -->
+      <div id="viewerFallbackNotice" class="hidden absolute bottom-4 left-4 right-4 bg-brandSurface/95 border border-brandCyan/40 p-3.5 rounded-2xl shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs z-20">
+        <div class="flex items-center gap-2">
+          <span class="text-brandCyan text-lg">💡</span>
+          <span class="text-slate-300">If this portal restricts embedded frame display (X-Frame-Options), tap Open in Browser to launch directly!</span>
+        </div>
+        <button onclick="document.getElementById('openExternalViewerBtn').click()" class="bg-brandCyan text-slate-950 font-bold px-3 py-1.5 rounded-xl whitespace-nowrap">
+          Open Direct Window ↗
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN MANAGEMENT MODAL -->
+  <div id="adminModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-brandSurface border border-brandBorder w-full max-w-2xl rounded-2xl shadow-2xl p-6 overflow-y-auto max-h-[92vh] custom-scroll animate-modal space-y-6">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-4 border-b border-brandBorder">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-brandCyan/15 text-brandCyan flex items-center justify-center font-bold text-base">⚙️</div>
+          <div>
+            <h3 class="text-base font-bold text-white">GyanSarthi Platform Management</h3>
+            <p class="text-xs text-slate-400">Add, edit, or remove catalog portals in real-time.</p>
+          </div>
+        </div>
+        <button id="closeAdminModalBtn" class="text-slate-400 hover:text-white text-lg p-1">✕</button>
+      </div>
+
+      <!-- Admin Actions Toolbar -->
+      <div class="flex flex-wrap items-center justify-between gap-3 bg-brandCard p-3.5 rounded-xl border border-brandBorder">
+        <div class="flex items-center gap-2">
+          <button id="openNewPlatformFormBtn" class="bg-brandCyan hover:bg-sky-400 text-slate-950 font-bold text-xs px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 shadow-md shadow-cyan-500/20">
+            <span>➕ Add New Platform</span>
+          </button>
+          <button id="seedDataBtn" class="bg-brandSurface hover:bg-brandCard text-brandCyan border border-brandCyan/40 text-xs px-3.5 py-2 rounded-xl font-medium transition flex items-center gap-1.5">
+            <span>🌱 Seed 4 Core Portals</span>
+          </button>
+        </div>
+        <button id="openFirebaseConfigBtn" class="text-xs text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-brandBorder px-3 py-2 rounded-xl transition">
+          🔥 Firebase Config
+        </button>
+      </div>
+
+      <!-- Platform Form Container (hidden by default) -->
+      <form id="adminPlatformForm" class="hidden bg-slate-900/90 border border-brandCyan/40 p-5 rounded-2xl space-y-4">
+        <div class="flex items-center justify-between pb-2 border-b border-brandBorder">
+          <h4 id="formHeading" class="text-sm font-bold text-brandCyan">Add New Platform</h4>
+          <button type="button" id="cancelFormBtn" class="text-xs text-slate-400 hover:text-white">Cancel</button>
+        </div>
+
+        <input type="hidden" id="formId" value="">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Platform Name *</label>
+            <input type="text" id="formName" required placeholder="e.g. PW Study, PW Marco"
+              class="w-full bg-slate-950 border border-brandBorder rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-brandCyan">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Category *</label>
+            <input type="text" id="formCategory" required placeholder="Education, Study, Courses, Tools"
+              class="w-full bg-slate-950 border border-brandBorder rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-brandCyan">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Website URL *</label>
+          <input type="url" id="formWebsiteUrl" required placeholder="https://example.com/study"
+            class="w-full bg-slate-950 border border-brandBorder rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-brandCyan">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Description</label>
+          <textarea id="formDescription" rows="2" placeholder="Brief overview of batches, modules, and courses"
+            class="w-full bg-slate-950 border border-brandBorder rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-brandCyan"></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">APK Download URL (Optional)</label>
+            <input type="url" id="formApkUrl" placeholder="https://example.com/app.apk"
+              class="w-full bg-slate-950 border border-brandBorder rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-brandCyan">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Sort Order (Number)</label>
+            <input type="number" id="formSortOrder" value="1" min="0"
+              class="w-full bg-slate-950 border border-brandBorder rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-brandCyan">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 pt-1">
+          <label class="flex items-center gap-2 bg-slate-950 border border-brandBorder p-3 rounded-xl cursor-pointer">
+            <input type="checkbox" id="formIsActive" checked class="w-4 h-4 accent-brandCyan rounded">
+            <div>
+              <span class="block text-xs font-semibold text-white">Active</span>
+              <span class="text-[10px] text-slate-400">Launchable in app</span>
+            </div>
+          </label>
+          <label class="flex items-center gap-2 bg-slate-950 border border-brandBorder p-3 rounded-xl cursor-pointer">
+            <input type="checkbox" id="formIsUpcoming" class="w-4 h-4 accent-brandAmber rounded">
+            <div>
+              <span class="block text-xs font-semibold text-white">Upcoming</span>
+              <span class="text-[10px] text-slate-400">Coming soon view</span>
+            </div>
+          </label>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="document.getElementById('adminPlatformForm').classList.add('hidden')" class="px-4 py-2 rounded-xl text-xs text-slate-400 hover:text-white">
+            Cancel
+          </button>
+          <button type="submit" class="bg-brandCyan hover:bg-sky-400 text-slate-950 font-bold text-xs px-5 py-2 rounded-xl transition shadow-md shadow-cyan-500/20">
+            Save Platform
+          </button>
+        </div>
+      </form>
+
+      <!-- Managed Platforms Table/List -->
+      <div class="space-y-3">
+        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Current Catalog Platforms</h4>
+        <div id="adminPlatformsList" class="space-y-2">
+          <!-- Dynamically filled -->
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FIREBASE CONFIG MODAL -->
+  <div id="firebaseConfigModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-brandSurface border border-brandBorder w-full max-w-md rounded-2xl shadow-2xl p-6 space-y-4 animate-modal">
+      <div class="flex items-center justify-between pb-3 border-b border-brandBorder">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+          <span>🔥</span> Firebase Firestore Settings
+        </h3>
+        <button onclick="document.getElementById('firebaseConfigModal').classList.add('hidden')" class="text-slate-400 hover:text-white">✕</button>
+      </div>
+
+      <p class="text-xs text-slate-300">
+        Enter your Firebase Web App configuration to link real-time Cloud Firestore synchronization.
+      </p>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Project ID *</label>
+          <input type="text" id="fbProjectId" placeholder="e.g. gyansarthi-hub" class="w-full bg-slate-900 border border-brandBorder rounded-xl px-3 py-2 text-white">
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">API Key</label>
+          <input type="text" id="fbApiKey" placeholder="AIzaSy..." class="w-full bg-slate-900 border border-brandBorder rounded-xl px-3 py-2 text-white font-mono">
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">App ID</label>
+          <input type="text" id="fbAppId" placeholder="1:123456789:web:abcdef..." class="w-full bg-slate-900 border border-brandBorder rounded-xl px-3 py-2 text-white font-mono">
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center pt-2">
+        <button id="resetFbConfigBtn" class="text-xs text-rose-400 hover:underline">
+          Reset to Default
+        </button>
+        <button id="saveFbConfigBtn" class="bg-brandCyan hover:bg-sky-400 text-slate-950 font-bold text-xs px-4 py-2 rounded-xl transition">
+          Save & Connect
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLATFORM DETAILS MODAL -->
+  <div id="platformDetailsModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-brandSurface border border-brandBorder w-full max-w-lg rounded-2xl shadow-2xl p-6 space-y-4 animate-modal">
+      <div class="flex items-start justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div id="modalLogoBox" class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brandCyan to-brandIndigo flex items-center justify-center text-slate-950 font-bold text-lg shadow">
+            GS
+          </div>
+          <div>
+            <h3 id="modalPlatformTitle" class="text-base font-bold text-white">Platform Title</h3>
+            <span id="modalCategoryBadge" class="text-[10px] font-bold px-2 py-0.5 rounded bg-brandCyan/20 text-brandCyan border border-brandCyan/30">Category</span>
+          </div>
+        </div>
+        <button onclick="document.getElementById('platformDetailsModal').classList.add('hidden')" class="text-slate-400 hover:text-white text-lg">✕</button>
+      </div>
+
+      <p id="modalPlatformDesc" class="text-xs text-slate-300 leading-relaxed">Platform description text...</p>
+
+      <div class="bg-slate-900/80 p-3.5 rounded-xl border border-brandBorder space-y-2 text-xs">
+        <div class="flex justify-between">
+          <span class="text-slate-400">Launch URL:</span>
+          <span id="modalWebsiteLink" class="text-brandCyan truncate max-w-[240px] font-mono">https://...</span>
+        </div>
+        <div id="modalApkRow" class="flex justify-between hidden">
+          <span class="text-slate-400">APK Package:</span>
+          <span id="modalApkLink" class="text-purple-400 truncate max-w-[240px] font-mono">Available</span>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-2">
+        <button id="modalDetailsFavBtn" class="bg-brandSurface hover:bg-brandCard text-white border border-brandBorder px-3.5 py-2 rounded-xl text-xs font-semibold transition">
+          ⭐ Bookmark
+        </button>
+        <button id="modalLaunchBtn" class="bg-brandCyan hover:bg-sky-400 text-slate-950 font-bold px-5 py-2 rounded-xl text-xs transition shadow-lg shadow-cyan-500/20">
+          🚀 Launch Portal
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="mt-auto border-t border-brandBorder/60 bg-brandSurface/40 py-6 px-4 text-center text-xs text-slate-500 space-y-2">
+    <div class="flex items-center justify-center gap-4 text-slate-400">
+      <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-brandCyan"></span> Progressive Web App</span>
+      <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Offline Ready</span>
+      <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-brandIndigo"></span> Service Worker v1.0.0</span>
+    </div>
+    <p>© 2026 GyanSarthi Hub • Education & Learning Platform Launcher</p>
+  </footer>
+
+  <!-- Application Script -->
+  <script>
+    // --- Seed Platform Data ---
+    const DEFAULT_PLATFORMS = [
+      {
+        id: "pw_study",
+        name: "PW Study",
+        description: "Interactive online study hub featuring comprehensive academic lessons, test modules, and course batches.",
+        websiteUrl: "https://pwthor.live/study",
+        apkUrl: "",
+        category: "Study",
+        isActive: true,
+        isUpcoming: false,
+        sortOrder: 1
+      },
+      {
+        id: "pw_marco",
+        name: "PW Marco",
+        description: "Structured learning classroom with chapter-wise video sessions, practice materials, and batch updates.",
+        websiteUrl: "https://pwmarco-og-06656c44b005.herokuapp.com",
+        apkUrl: "",
+        category: "Education",
+        isActive: true,
+        isUpcoming: false,
+        sortOrder: 2
+      },
+      {
+        id: "as_multiverse",
+        name: "AS Multiverse",
+        description: "Multiverse educational ecosystem offering syllabus tracking, video lectures, and rich learning tracks.",
+        websiteUrl: "https://asmultiverse.com/?tab=home&app=694690cbe1df5128eacc5caa",
+        apkUrl: "",
+        category: "Courses",
+        isActive: true,
+        isUpcoming: false,
+        sortOrder: 3
+      },
+      {
+        id: "khan_academy",
+        name: "Khan Academy",
+        description: "World-class education for anyone, anywhere. Free lessons, interactive exercises, and videos for math, science, and computing.",
+        websiteUrl: "https://www.khanacademy.org",
+        apkUrl: "",
+        category: "Education",
+        isActive: true,
+        isUpcoming: false,
+        sortOrder: 4
+      },
+      {
+        id: "gyan_ai_future",
+        name: "GyanSarthi AI Tutor",
+        description: "Next-generation adaptive AI tutor for personalized doubt resolution and guided mock examinations.",
+        websiteUrl: "https://gyansarthi.org/ai",
+        apkUrl: "",
+        category: "Tools",
+        isActive: false,
+        isUpcoming: true,
+        sortOrder: 5
+      }
+    ];
+
+    // --- State Variables ---
+    let platforms = [];
+    let currentCategory = 'ALL';
+    let searchQuery = '';
+    let currentTab = 'home';
+    let deferredInstallPrompt = null;
+    let favorites = JSON.parse(localStorage.getItem('gyansarthi_favs') || '[]');
+    let firestoreDb = null;
+
+    // --- Local Storage Cache Initialization ---
+    function loadSavedPlatforms() {
+      const saved = localStorage.getItem('gyansarthi_platforms');
+      if (saved) {
+        try {
+          platforms = JSON.parse(saved);
+        } catch (e) {
+          platforms = [...DEFAULT_PLATFORMS];
+        }
+      } else {
+        platforms = [...DEFAULT_PLATFORMS];
+        savePlatforms();
+      }
+    }
+
+    function savePlatforms() {
+      localStorage.setItem('gyansarthi_platforms', JSON.stringify(platforms));
+    }
+
+    // --- Initialize Firebase Firestore ---
+    function initFirebase() {
+      const savedConfig = localStorage.getItem('gyansarthi_firebase_config');
+      let fbConfig = null;
+
+      if (savedConfig) {
+        try {
+          fbConfig = JSON.parse(savedConfig);
+        } catch (e) {}
+      }
+
+      // Default or configured Firebase
+      if (fbConfig && fbConfig.projectId && window.firebase) {
+        try {
+          if (!firebase.apps.length) {
+            firebase.initializeApp(fbConfig);
+          }
+          firestoreDb = firebase.firestore();
+          // Enable offline persistence
+          firestoreDb.enablePersistence({ synchronizeTabs: true }).catch(() => {});
+          subscribeToFirestore();
+          return;
+        } catch (e) {
+          console.warn('[Firebase] Init error:', e);
+        }
+      }
+
+      // If no custom config, check status
+      document.getElementById('syncStatusText').textContent = 'Local Cache';
+    }
+
+    function subscribeToFirestore() {
+      if (!firestoreDb) return;
+
+      document.getElementById('syncStatusText').textContent = 'Connecting...';
+
+      firestoreDb.collection('platforms').onSnapshot((snapshot) => {
+        if (!snapshot.empty) {
+          const cloudPlatforms = [];
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            cloudPlatforms.push({
+              id: doc.id,
+              name: data.name || 'Untitled',
+              description: data.description || '',
+              websiteUrl: data.websiteUrl || '',
+              apkUrl: data.apkUrl || '',
+              category: data.category || 'Education',
+              isActive: data.isActive !== false,
+              isUpcoming: !!data.isUpcoming,
+              sortOrder: Number(data.sortOrder) || 0
+            });
+          });
+
+          if (cloudPlatforms.length > 0) {
+            platforms = cloudPlatforms;
+            savePlatforms();
+            document.getElementById('syncStatusText').textContent = 'Live Sync';
+            renderAllViews();
+          }
+        } else {
+          document.getElementById('syncStatusText').textContent = 'Live (Empty)';
+        }
+      }, (err) => {
+        console.warn('[Firestore] Sync warning:', err.message);
+        document.getElementById('syncStatusText').textContent = 'Cache Mode';
+      });
+    }
+
+    // --- Service Worker & PWA Install Management ---
+    function initPWA() {
+      // 1. Register Service Worker
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((reg) => {
+              console.log('[PWA] Service Worker registered:', reg.scope);
+              reg.onupdatefound = () => {
+                const installingWorker = reg.installing;
+                installingWorker.onstatechange = () => {
+                  if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    console.log('[PWA] New version available!');
+                  }
+                };
+              };
+            })
+            .catch((err) => {
+              console.warn('[PWA] Service Worker registration failed:', err);
+            });
+        });
+      }
+
+      // 2. Check if running in Standalone / Installed Mode
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+      if (isStandalone) {
+        document.getElementById('standaloneBadge').classList.remove('hidden');
+        document.getElementById('standaloneBadge').classList.add('flex');
+        document.getElementById('pwaInstallBanner').classList.add('hidden');
+      }
+
+      // 3. Capture beforeinstallprompt event
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredInstallPrompt = e;
+
+        // Show install button and banner if not already standalone
+        if (!isStandalone) {
+          const banner = document.getElementById('pwaInstallBanner');
+          const headerBtn = document.getElementById('headerInstallBtn');
+          if (banner) banner.classList.remove('hidden');
+          if (headerBtn) {
+            headerBtn.classList.remove('hidden');
+            headerBtn.classList.add('flex');
+          }
+        }
+      });
+
+      // 4. Track appinstalled
+      window.addEventListener('appinstalled', () => {
+        deferredInstallPrompt = null;
+        document.getElementById('pwaInstallBanner').classList.add('hidden');
+        document.getElementById('headerInstallBtn').classList.add('hidden');
+        document.getElementById('standaloneBadge').classList.remove('hidden');
+        document.getElementById('standaloneBadge').classList.add('flex');
+        console.log('[PWA] App successfully installed!');
+      });
+
+      // 5. Setup Install Actions
+      const handleInstallClick = async () => {
+        if (!deferredInstallPrompt) {
+          alert('To install GyanSarthi:\n- On Android Chrome: Tap ⋮ menu > "Install app" or "Add to Home screen"\n- On iPhone/iPad Safari: Tap Share ⎙ > "Add to Home Screen"');
+          return;
+        }
+        deferredInstallPrompt.prompt();
+        const { outcome } = await deferredInstallPrompt.userChoice;
+        if (outcome === 'accepted') {
+          console.log('[PWA] User accepted install prompt');
+        }
+        deferredInstallPrompt = null;
+      };
+
+      document.getElementById('bannerInstallBtn').addEventListener('click', handleInstallClick);
+      document.getElementById('headerInstallBtn').addEventListener('click', handleInstallClick);
+
+      document.getElementById('bannerDismissBtn').addEventListener('click', () => {
+        document.getElementById('pwaInstallBanner').classList.add('hidden');
+      });
+
+      // 6. Network connectivity listeners
+      window.addEventListener('online', updateNetworkStatus);
+      window.addEventListener('offline', updateNetworkStatus);
+      updateNetworkStatus();
+    }
+
+    function updateNetworkStatus() {
+      const isOnline = navigator.onLine;
+      const offlineBar = document.getElementById('offlineBar');
+      if (!isOnline) {
+        offlineBar.classList.remove('hidden');
+        document.getElementById('syncStatusText').textContent = 'Offline';
+      } else {
+        offlineBar.classList.add('hidden');
+        if (firestoreDb) {
+          document.getElementById('syncStatusText').textContent = 'Live Sync';
+        }
+      }
+    }
+
+    // --- Tab Navigation ---
+    function switchTab(tabId) {
+      currentTab = tabId;
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.nav-tab').forEach(btn => {
+        btn.classList.remove('active', 'bg-brandCyan', 'text-slate-950');
+        btn.classList.add('text-slate-400');
+        if (btn.dataset.tab === tabId) {
+          btn.classList.add('active', 'bg-brandCyan', 'text-slate-950');
+          btn.classList.remove('text-slate-400');
+        }
+      });
+
+      const activeTabEl = document.getElementById('tab' + tabId.charAt(0).toUpperCase() + tabId.slice(1));
+      if (activeTabEl) {
+        activeTabEl.classList.remove('hidden');
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    document.querySelectorAll('.nav-tab').forEach(btn => {
+      btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+    });
+
+    // --- Filtering and Sorting ---
+    function getFilteredPlatforms() {
+      return platforms.filter(p => {
+        const matchesCategory = currentCategory === 'ALL' || (p.category && p.category.toLowerCase() === currentCategory.toLowerCase());
+        const q = searchQuery.toLowerCase().trim();
+        const matchesSearch = !q ||
+          p.name.toLowerCase().includes(q) ||
+          p.description.toLowerCase().includes(q) ||
+          p.category.toLowerCase().includes(q) ||
+          p.websiteUrl.toLowerCase().includes(q);
+
+        return matchesCategory && matchesSearch;
+      });
+    }
+
+    function sortPlatforms(items) {
+      const sortVal = document.getElementById('sortSelect').value;
+      return [...items].sort((a, b) => {
+        if (sortVal === 'name') return a.name.localeCompare(b.name);
+        if (sortVal === 'category') return a.category.localeCompare(b.category);
+        return (a.sortOrder || 0) - (b.sortOrder || 0);
+      });
+    }
+
+    // --- Category Rendering ---
+    function renderCategoryChips() {
+      const container = document.getElementById('categoryChipsContainer');
+      const cats = Array.from(new Set(platforms.map(p => p.category).filter(Boolean))).sort();
+      const allCategories = ['ALL', ...cats];
+
+      container.innerHTML = allCategories.map(cat => {
+        const isSelected = currentCategory.toUpperCase() === cat.toUpperCase();
+        const label = cat === 'ALL' ? 'All Categories' : cat;
+        const count = cat === 'ALL' ? platforms.filter(p => p.isActive).length : platforms.filter(p => p.isActive && p.category.toLowerCase() === cat.toLowerCase()).length;
+        return `
+          <button class="cat-chip whitespace-nowrap text-xs font-semibold px-4 py-2 rounded-xl transition ${isSelected ? 'bg-brandCyan text-slate-950' : 'bg-brandSurface text-slate-400 hover:text-white border border-brandBorder'}" data-category="${cat}">
+            ${label} <span class="opacity-70 text-[10px]">(${count})</span>
+          </button>
+        `;
+      }).join('');
+
+      container.querySelectorAll('.cat-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+          currentCategory = btn.dataset.category;
+          renderCategoryChips();
+          renderPlatformsList();
+          renderHomeFeatured();
+        });
+      });
+    }
+
+    // --- Platform Card HTML Generator ---
+    function createPlatformCard(platform) {
+      const isFav = favorites.includes(platform.id);
+      const categoryColor = getCategoryColor(platform.category);
+      const monogram = platform.name.substring(0, 2).toUpperCase();
+
+      return `
+        <div class="bg-brandSurface border border-brandBorder/80 hover:border-brandCyan/40 rounded-2xl p-5 flex flex-col justify-between transition-all duration-200 glow-hover group relative">
+          <!-- Top Row -->
+          <div class="space-y-3">
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-brandCyan to-brandIndigo flex items-center justify-center font-bold text-slate-950 text-sm shadow-md">
+                  ${monogram}
+                </div>
+                <div>
+                  <h4 class="text-sm sm:text-base font-bold text-white group-hover:text-brandCyan transition-colors flex items-center gap-2">
+                    ${escapeHtml(platform.name)}
+                  </h4>
+                  <span class="inline-block text-[10px] font-semibold px-2 py-0.5 rounded ${categoryColor}">
+                    ${escapeHtml(platform.category)}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Favorite Pin Button -->
+              <button onclick="toggleFavorite('${platform.id}')" title="${isFav ? 'Remove from bookmarks' : 'Add to bookmarks'}" class="text-base p-1.5 rounded-lg hover:bg-brandCard transition ${isFav ? 'text-amber-400' : 'text-slate-500 hover:text-white'}">
+                ${isFav ? '★' : '☆'}
+              </button>
+            </div>
+
+            <!-- Description -->
+            <p class="text-xs text-slate-300 line-clamp-2 leading-relaxed">
+              ${escapeHtml(platform.description || 'Interactive learning batch with live lessons and syllabus resources.')}
+            </p>
+
+            <!-- URL snippet -->
+            <div class="text-[11px] text-slate-500 font-mono truncate">
+              🌐 ${escapeHtml(platform.websiteUrl.replace(/^https?:\/\//, ''))}
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="pt-4 mt-2 border-t border-brandBorder/60 flex items-center gap-2">
+            <!-- Launch Button -->
+            <button onclick="openPlatformViewer('${platform.id}')" class="flex-1 bg-brandCyan hover:bg-sky-400 text-slate-950 font-bold text-xs py-2 px-3 rounded-xl transition flex items-center justify-center gap-1.5 shadow-md shadow-cyan-500/15">
+              <span>🚀 Launch</span>
+            </button>
+
+            <!-- APK Download (if provided) -->
+            ${platform.apkUrl ? `
+              <a href="${escapeHtml(platform.apkUrl)}" download target="_blank" class="bg-purple-950/60 hover:bg-purple-900 text-purple-300 border border-purple-800/40 text-xs py-2 px-3 rounded-xl transition flex items-center justify-center gap-1 font-semibold" title="Download Android APK">
+                <span>📦 APK</span>
+              </a>
+            ` : ''}
+
+            <!-- Details Info Modal -->
+            <button onclick="openDetailsModal('${platform.id}')" class="bg-brandCard hover:bg-brandCardHover text-slate-300 text-xs py-2 px-3 rounded-xl border border-brandBorder transition" title="Platform Details">
+              ℹ️
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function getCategoryColor(cat) {
+      const c = (cat || '').toLowerCase();
+      if (c.includes('study')) return 'bg-sky-950/70 text-brandCyan border border-sky-800/40';
+      if (c.includes('course')) return 'bg-indigo-950/70 text-brandIndigo border border-indigo-800/40';
+      if (c.includes('tool')) return 'bg-amber-950/70 text-brandAmber border border-amber-800/40';
+      return 'bg-emerald-950/70 text-brandEmerald border border-emerald-800/40';
+    }
+
+    // --- Render Views ---
+    function renderHomeFeatured() {
+      const grid = document.getElementById('homeFeaturedGrid');
+      const activePlatforms = platforms.filter(p => p.isActive && !p.isUpcoming);
+      const featured = activePlatforms.slice(0, 6);
+
+      if (featured.length === 0) {
+        grid.innerHTML = '<div class="col-span-full py-8 text-center text-xs text-slate-400">No active portals. Click "Admin" to seed or add platforms.</div>';
+        return;
+      }
+
+      grid.innerHTML = featured.map(p => createPlatformCard(p)).join('');
+    }
+
+    function renderPlatformsList() {
+      const grid = document.getElementById('platformsCatalogGrid');
+      const emptyState = document.getElementById('platformsEmptyState');
+      const filtered = sortPlatforms(getFilteredPlatforms().filter(p => !p.isUpcoming));
+
+      document.getElementById('platformsCountBadge').textContent = filtered.length;
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '';
+        emptyState.classList.remove('hidden');
+      } else {
+        emptyState.classList.add('hidden');
+        grid.innerHTML = filtered.map(p => createPlatformCard(p)).join('');
+      }
+    }
+
+    function renderUpcoming() {
+      const grid = document.getElementById('upcomingPlatformsGrid');
+      const emptyState = document.getElementById('upcomingEmptyState');
+      const upcoming = platforms.filter(p => p.isUpcoming);
+
+      document.getElementById('upcomingCountBadge').textContent = upcoming.length;
+
+      if (upcoming.length === 0) {
+        grid.innerHTML = '';
+        emptyState.classList.remove('hidden');
+      } else {
+        emptyState.classList.add('hidden');
+        grid.innerHTML = upcoming.map(p => {
+          const monogram = p.name.substring(0, 2).toUpperCase();
+          return `
+            <div class="bg-brandSurface border border-brandBorder/80 rounded-2xl p-5 space-y-3 relative">
+              <div class="flex items-start justify-between">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-brandAmber border border-amber-500/30 flex items-center justify-center font-bold text-sm">
+                    ${monogram}
+                  </div>
+                  <div>
+                    <h4 class="text-sm font-bold text-white">${escapeHtml(p.name)}</h4>
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-brandAmber/20 text-brandAmber border border-brandAmber/30">
+                      COMING SOON
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <p class="text-xs text-slate-300 leading-relaxed">${escapeHtml(p.description)}</p>
+              <div class="pt-2 flex items-center justify-between text-xs text-slate-400">
+                <span>Expected Release: Q4</span>
+                <button onclick="alert('Notification alert set for ${escapeHtml(p.name)}!')" class="text-xs text-brandCyan hover:underline font-semibold">
+                  🔔 Notify Me
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    function renderFavorites() {
+      const grid = document.getElementById('favoritesGrid');
+      const emptyState = document.getElementById('favoritesEmptyState');
+      const favPlatforms = platforms.filter(p => favorites.includes(p.id));
+
+      document.getElementById('favCountBadge').textContent = favPlatforms.length;
+
+      if (favPlatforms.length === 0) {
+        grid.innerHTML = '';
+        emptyState.classList.remove('hidden');
+      } else {
+        emptyState.classList.add('hidden');
+        grid.innerHTML = favPlatforms.map(p => createPlatformCard(p)).join('');
+      }
+    }
+
+    function updateMetrics() {
+      const active = platforms.filter(p => p.isActive && !p.isUpcoming).length;
+      const cats = new Set(platforms.map(p => p.category)).size;
+      const heroActive = document.getElementById('heroActivePortals');
+      const heroCats = document.getElementById('heroCategories');
+      if (heroActive) heroActive.textContent = active;
+      if (heroCats) heroCats.textContent = cats;
+    }
+
+    function renderAllViews() {
+      updateMetrics();
+      renderCategoryChips();
+      renderHomeFeatured();
+      renderPlatformsList();
+      renderUpcoming();
+      renderFavorites();
+      renderAdminPlatforms();
+    }
+
+    // --- Bookmarks/Favorites Management ---
+    function toggleFavorite(id) {
+      if (favorites.includes(id)) {
+        favorites = favorites.filter(f => f !== id);
+      } else {
+        favorites.push(id);
+      }
+      localStorage.setItem('gyansarthi_favs', JSON.stringify(favorites));
+      renderAllViews();
+    }
+
+    document.getElementById('clearAllFavsBtn').addEventListener('click', () => {
+      if (confirm('Clear all saved bookmarks?')) {
+        favorites = [];
+        localStorage.setItem('gyansarthi_favs', JSON.stringify(favorites));
+        renderFavorites();
+        renderAllViews();
+      }
+    });
+
+    // --- In-App Web Viewer (Browser Emulator) ---
+    function openPlatformViewer(platformId) {
+      const platform = platforms.find(p => p.id === platformId);
+      if (!platform || !platform.websiteUrl) return;
+
+      const modal = document.getElementById('inAppViewerModal');
+      const iframe = document.getElementById('viewerIframe');
+      const nameEl = document.getElementById('viewerPlatformName');
+      const urlEl = document.getElementById('viewerPlatformUrl');
+      const spinner = document.getElementById('viewerLoadingSpinner');
+      const fallbackNotice = document.getElementById('viewerFallbackNotice');
+      const externalBtn = document.getElementById('openExternalViewerBtn');
+
+      nameEl.textContent = platform.name;
+      urlEl.textContent = platform.websiteUrl;
+      externalBtn.onclick = () => window.open(platform.websiteUrl, '_blank', 'noopener,noreferrer');
+
+      spinner.style.display = 'flex';
+      fallbackNotice.classList.add('hidden');
+
+      iframe.src = platform.websiteUrl;
+
+      iframe.onload = () => {
+        spinner.style.display = 'none';
+        // Note: Some educational sites send X-Frame-Options: SAMEORIGIN.
+        // We show the fallback notice after 2.5s so users always have a direct 1-tap escape.
+        setTimeout(() => {
+          fallbackNotice.classList.remove('hidden');
+        }, 2000);
+      };
+
+      iframe.onerror = () => {
+        spinner.style.display = 'none';
+        fallbackNotice.classList.remove('hidden');
+      };
+
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closePlatformViewer() {
+      const modal = document.getElementById('inAppViewerModal');
+      const iframe = document.getElementById('viewerIframe');
+      iframe.src = 'about:blank';
+      modal.classList.add('hidden');
+      document.body.style.overflow = 'auto';
+    }
+
+    document.getElementById('closeViewerBtn').addEventListener('click', closePlatformViewer);
+    document.getElementById('reloadViewerBtn').addEventListener('click', () => {
+      const iframe = document.getElementById('viewerIframe');
+      if (iframe.src && iframe.src !== 'about:blank') {
+        const cur = iframe.src;
+        iframe.src = cur;
+      }
+    });
+
+    function openFirstPlatform() {
+      const first = platforms.find(p => p.isActive && !p.isUpcoming);
+      if (first) openPlatformViewer(first.id);
+    }
+
+    // --- Details Modal ---
+    function openDetailsModal(platformId) {
+      const p = platforms.find(item => item.id === platformId);
+      if (!p) return;
+
+      document.getElementById('modalPlatformTitle').textContent = p.name;
+      document.getElementById('modalCategoryBadge').textContent = p.category;
+      document.getElementById('modalPlatformDesc').textContent = p.description || 'No detailed description provided.';
+      document.getElementById('modalWebsiteLink').textContent = p.websiteUrl;
+      document.getElementById('modalLogoBox').textContent = p.name.substring(0, 2).toUpperCase();
+
+      const apkRow = document.getElementById('modalApkRow');
+      if (p.apkUrl) {
+        apkRow.classList.remove('hidden');
+        document.getElementById('modalApkLink').textContent = p.apkUrl;
+      } else {
+        apkRow.classList.add('hidden');
+      }
+
+      const launchBtn = document.getElementById('modalLaunchBtn');
+      launchBtn.onclick = () => {
+        document.getElementById('platformDetailsModal').classList.add('hidden');
+        openPlatformViewer(p.id);
+      };
+
+      const favBtn = document.getElementById('modalDetailsFavBtn');
+      favBtn.textContent = favorites.includes(p.id) ? '★ Bookmarked' : '☆ Bookmark';
+      favBtn.onclick = () => {
+        toggleFavorite(p.id);
+        favBtn.textContent = favorites.includes(p.id) ? '★ Bookmarked' : '☆ Bookmark';
+      };
+
+      document.getElementById('platformDetailsModal').classList.remove('hidden');
+    }
+
+    // --- Admin Platform Management ---
+    function openAdminModal() {
+      document.getElementById('adminModal').classList.remove('hidden');
+      renderAdminPlatforms();
+    }
+
+    function closeAdminModal() {
+      document.getElementById('adminModal').classList.add('hidden');
+      document.getElementById('adminPlatformForm').classList.add('hidden');
+    }
+
+    document.getElementById('openAdminBtn').addEventListener('click', openAdminModal);
+    document.getElementById('closeAdminModalBtn').addEventListener('click', closeAdminModal);
+
+    function renderAdminPlatforms() {
+      const container = document.getElementById('adminPlatformsList');
+      if (!container) return;
+
+      if (platforms.length === 0) {
+        container.innerHTML = '<div class="text-xs text-slate-400 py-4 text-center">No platforms in catalog.</div>';
+        return;
+      }
+
+      container.innerHTML = platforms.map(p => `
+        <div class="bg-slate-900 border border-brandBorder p-3 rounded-xl flex items-center justify-between gap-3 text-xs">
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-white truncate">${escapeHtml(p.name)}</span>
+              <span class="text-[10px] px-1.5 py-0.2 rounded ${p.isActive ? 'bg-emerald-950 text-emerald-400' : 'bg-slate-800 text-slate-400'}">
+                ${p.isActive ? 'Active' : 'Inactive'}
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-400 truncate">${escapeHtml(p.websiteUrl)}</p>
+          </div>
+          <div class="flex items-center gap-1.5 flex-shrink-0">
+            <button onclick="editPlatform('${p.id}')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1.5 rounded-lg text-xs">
+              ✏️ Edit
+            </button>
+            <button onclick="deletePlatform('${p.id}')" class="bg-rose-950/60 hover:bg-rose-900 text-rose-300 px-2.5 py-1.5 rounded-lg text-xs">
+              🗑️
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Add/Edit Platform form triggers
+    document.getElementById('openNewPlatformFormBtn').addEventListener('click', () => {
+      const form = document.getElementById('adminPlatformForm');
+      document.getElementById('formHeading').textContent = 'Add New Platform';
+      document.getElementById('formId').value = '';
+      document.getElementById('formName').value = '';
+      document.getElementById('formCategory').value = 'Education';
+      document.getElementById('formWebsiteUrl').value = '';
+      document.getElementById('formDescription').value = '';
+      document.getElementById('formApkUrl').value = '';
+      document.getElementById('formSortOrder').value = platforms.length + 1;
+      document.getElementById('formIsActive').checked = true;
+      document.getElementById('formIsUpcoming').checked = false;
+
+      form.classList.remove('hidden');
+      form.scrollIntoView({ behavior: 'smooth' });
+    });
+
+    function editPlatform(id) {
+      const p = platforms.find(item => item.id === id);
+      if (!p) return;
+
+      const form = document.getElementById('adminPlatformForm');
+      document.getElementById('formHeading').textContent = 'Edit Platform: ' + p.name;
+      document.getElementById('formId').value = p.id;
+      document.getElementById('formName').value = p.name;
+      document.getElementById('formCategory').value = p.category;
+      document.getElementById('formWebsiteUrl').value = p.websiteUrl;
+      document.getElementById('formDescription').value = p.description || '';
+      document.getElementById('formApkUrl').value = p.apkUrl || '';
+      document.getElementById('formSortOrder').value = p.sortOrder || 1;
+      document.getElementById('formIsActive').checked = p.isActive !== false;
+      document.getElementById('formIsUpcoming').checked = !!p.isUpcoming;
+
+      form.classList.remove('hidden');
+      form.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    document.getElementById('adminPlatformForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('formId').value.trim() || ('plat_' + Date.now());
+      const name = document.getElementById('formName').value.trim();
+      const category = document.getElementById('formCategory').value.trim();
+      const websiteUrl = document.getElementById('formWebsiteUrl').value.trim();
+      const description = document.getElementById('formDescription').value.trim();
+      const apkUrl = document.getElementById('formApkUrl').value.trim();
+      const sortOrder = Number(document.getElementById('formSortOrder').value) || 1;
+      const isActive = document.getElementById('formIsActive').checked;
+      const isUpcoming = document.getElementById('formIsUpcoming').checked;
+
+      const newPlatform = {
+        id,
+        name,
+        category,
+        websiteUrl,
+        description,
+        apkUrl,
+        sortOrder,
+        isActive,
+        isUpcoming
+      };
+
+      const existingIndex = platforms.findIndex(p => p.id === id);
+      if (existingIndex >= 0) {
+        platforms[existingIndex] = newPlatform;
+      } else {
+        platforms.push(newPlatform);
+      }
+
+      savePlatforms();
+      renderAllViews();
+
+      // Cloud Firestore sync if configured
+      if (firestoreDb) {
+        try {
+          await firestoreDb.collection('platforms').doc(id).set(newPlatform, { merge: true });
+        } catch (err) {
+          console.warn('[Firestore] Save error:', err);
+        }
+      }
+
+      document.getElementById('adminPlatformForm').classList.add('hidden');
+    });
+
+    async function deletePlatform(id) {
+      if (!confirm('Are you sure you want to delete this platform?')) return;
+
+      platforms = platforms.filter(p => p.id !== id);
+      savePlatforms();
+      renderAllViews();
+
+      if (firestoreDb) {
+        try {
+          await firestoreDb.collection('platforms').doc(id).delete();
+        } catch (err) {
+          console.warn('[Firestore] Delete error:', err);
+        }
+      }
+    }
+
+    document.getElementById('seedDataBtn').addEventListener('click', async () => {
+      if (!confirm('Seed default 4 platforms into catalog?')) return;
+
+      DEFAULT_PLATFORMS.forEach(item => {
+        if (!platforms.some(p => p.id === item.id)) {
+          platforms.push({ ...item });
+        }
+      });
+
+      savePlatforms();
+      renderAllViews();
+
+      if (firestoreDb) {
+        try {
+          const batch = firestoreDb.batch();
+          DEFAULT_PLATFORMS.forEach(item => {
+            const ref = firestoreDb.collection('platforms').doc(item.id);
+            batch.set(ref, item, { merge: true });
+          });
+          await batch.commit();
+          alert('Successfully seeded 4 platforms to Cloud Firestore!');
+        } catch (e) {
+          alert('Local platforms seeded. Firestore sync error: ' + e.message);
+        }
+      }
+    });
+
+    // --- Firebase Config Modal ---
+    document.getElementById('openFirebaseConfigBtn').addEventListener('click', () => {
+      const savedConfig = localStorage.getItem('gyansarthi_firebase_config');
+      if (savedConfig) {
+        try {
+          const cfg = JSON.parse(savedConfig);
+          document.getElementById('fbProjectId').value = cfg.projectId || '';
+          document.getElementById('fbApiKey').value = cfg.apiKey || '';
+          document.getElementById('fbAppId').value = cfg.appId || '';
+        } catch (e) {}
+      }
+      document.getElementById('firebaseConfigModal').classList.remove('hidden');
+    });
+
+    document.getElementById('saveFbConfigBtn').addEventListener('click', () => {
+      const projectId = document.getElementById('fbProjectId').value.trim();
+      const apiKey = document.getElementById('fbApiKey').value.trim();
+      const appId = document.getElementById('fbAppId').value.trim();
+
+      if (!projectId) {
+        alert('Please enter at least a Project ID.');
+        return;
+      }
+
+      const cfg = { projectId, apiKey, appId };
+      localStorage.setItem('gyansarthi_firebase_config', JSON.stringify(cfg));
+      document.getElementById('firebaseConfigModal').classList.add('hidden');
+      alert('Firebase configuration saved! Reconnecting...');
+      initFirebase();
+    });
+
+    document.getElementById('resetFbConfigBtn').addEventListener('click', () => {
+      localStorage.removeItem('gyansarthi_firebase_config');
+      document.getElementById('fbProjectId').value = '';
+      document.getElementById('fbApiKey').value = '';
+      document.getElementById('fbAppId').value = '';
+      alert('Config reset to default.');
+    });
+
+    // --- Search Input Listener ---
+    const searchInput = document.getElementById('quickSearchInput');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+
+    searchInput.addEventListener('input', (e) => {
+      searchQuery = e.target.value;
+      if (searchQuery) {
+        clearSearchBtn.classList.remove('hidden');
+        if (currentTab !== 'platforms') {
+          switchTab('platforms');
+        }
+      } else {
+        clearSearchBtn.classList.add('hidden');
+      }
+      renderPlatformsList();
+    });
+
+    clearSearchBtn.addEventListener('click', () => {
+      searchQuery = '';
+      searchInput.value = '';
+      clearSearchBtn.classList.add('hidden');
+      renderPlatformsList();
+    });
+
+    function resetFilters() {
+      currentCategory = 'ALL';
+      searchQuery = '';
+      searchInput.value = '';
+      clearSearchBtn.classList.add('hidden');
+      renderCategoryChips();
+      renderPlatformsList();
+    }
+
+    document.getElementById('sortSelect').addEventListener('change', renderPlatformsList);
+    document.getElementById('refreshPlatformsBtn').addEventListener('click', () => {
+      if (firestoreDb) {
+        subscribeToFirestore();
+      } else {
+        loadSavedPlatforms();
+        renderAllViews();
+      }
+    });
+
+    // --- Helper Utility: Escape HTML ---
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // --- App Launch Lifecycle ---
+    window.addEventListener('DOMContentLoaded', () => {
+      loadSavedPlatforms();
+      renderAllViews();
+      initFirebase();
+      initPWA();
+    });
+  </script>
+</body>
+</html>

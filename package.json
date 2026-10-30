@@ -1,0 +1,9 @@
+{
+  "name": "gyansarthi-pwa",
+  "version": "1.0.0",
+  "description": "GyanSarthi Progressive Web App - Educational Platform Hub & Launcher",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  }
+}

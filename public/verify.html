@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>GyanSarthi - Verification Verified</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    body {
+      background-color: #0B0F19;
+      color: #F8FAFC;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px 16px;
+      text-align: center;
+    }
+    .card {
+      background: #131B2E;
+      border: 1px solid rgba(0, 242, 254, 0.25);
+      border-radius: 24px;
+      padding: 36px 28px;
+      max-width: 440px;
+      width: 100%;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 40px rgba(0, 242, 254, 0.12);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .icon-wrapper {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(0, 242, 254, 0.2));
+      border: 2px solid #10B981;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      animation: pulse 2s infinite ease-in-out;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+      70% { transform: scale(1.05); box-shadow: 0 0 0 16px rgba(16, 185, 129, 0); }
+      100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+    .icon-wrapper svg {
+      width: 44px;
+      height: 44px;
+      color: #10B981;
+    }
+    .app-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: #F8FAFC;
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(16, 185, 129, 0.15);
+      color: #10B981;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .desc {
+      font-size: 14px;
+      color: #94A3B8;
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+    .primary-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      height: 52px;
+      background: linear-gradient(135deg, #00F2FE 0%, #4FACFE 100%);
+      color: #0B0F19;
+      font-size: 16px;
+      font-weight: 700;
+      text-decoration: none;
+      border-radius: 14px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(0, 242, 254, 0.35);
+      transition: all 0.2s ease;
+    }
+    .primary-btn:hover {
+      opacity: 0.95;
+      transform: translateY(-2px);
+    }
+    .secondary-info {
+      margin-top: 20px;
+      font-size: 12px;
+      color: #64748B;
+      line-height: 1.5;
+    }
+    .countdown-text {
+      color: #00F2FE;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon-wrapper">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+      </svg>
+    </div>
+
+    <div class="app-title">GyanSarthi</div>
+    <div class="badge">
+      <span>●</span> 24-Hour Pass Activated
+    </div>
+
+    <p class="desc">
+      AroLinks security verification solved successfully! Your temporary signed access pass has been granted.
+    </p>
+
+    <a id="openAppBtn" class="primary-btn" href="#">
+      Open GyanSarthi App
+    </a>
+
+    <p class="secondary-info">
+      Redirecting you automatically in <span id="countdown" class="countdown-text">3</span> seconds...<br>
+      If the app doesn't open, tap the button above.
+    </p>
+  </div>
+
+  <script>
+    // Extract parameters from URL
+    const params = new URLSearchParams(window.location.search);
+    const session = params.get('session') || '';
+    const expires = params.get('expires') || '';
+    const verifiedAt = params.get('verifiedAt') || '';
+    const sig = params.get('sig') || '';
+
+    // Construct the deep link URL for GyanSarthi
+    let deepLinkUrl = "gyansarthi://verify?session=" + encodeURIComponent(session) +
+      "&expires=" + encodeURIComponent(expires) +
+      "&sig=" + encodeURIComponent(sig);
+    if (verifiedAt) {
+      deepLinkUrl += "&verifiedAt=" + encodeURIComponent(verifiedAt);
+    }
+
+    const btn = document.getElementById('openAppBtn');
+    btn.href = deepLinkUrl;
+
+    // Trigger immediate auto-redirect to app
+    function tryLaunchApp() {
+      window.location.href = deepLinkUrl;
+    }
+
+    tryLaunchApp();
+
+    // Countdown fallback
+    let secondsLeft = 3;
+    const countdownEl = document.getElementById('countdown');
+    const timer = setInterval(() => {
+      secondsLeft--;
+      if (countdownEl) {
+        countdownEl.textContent = secondsLeft;
+      }
+      if (secondsLeft <= 0) {
+        clearInterval(timer);
+        tryLaunchApp();
+      }
+    }, 1000);
+  </script>
+</body>
+</html>

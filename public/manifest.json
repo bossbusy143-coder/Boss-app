@@ -1,0 +1,69 @@
+{
+  "id": "/?source=pwa",
+  "name": "GyanSarthi - Education & Learning Platform Hub",
+  "short_name": "GyanSarthi",
+  "description": "Dynamic educational platform catalog, study batches, and learning launcher portal",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#0B0F19",
+  "theme_color": "#0B0F19",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": [
+    "education",
+    "productivity",
+    "utilities"
+  ],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Explore Platforms",
+      "short_name": "Platforms",
+      "description": "Browse and launch educational study portals",
+      "url": "/#platforms",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Upcoming Portals",
+      "short_name": "Upcoming",
+      "description": "View coming soon batches and platforms",
+      "url": "/#upcoming",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Admin Portal",
+      "short_name": "Admin",
+      "description": "Manage catalog platforms and real-time sync",
+      "url": "/#admin",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

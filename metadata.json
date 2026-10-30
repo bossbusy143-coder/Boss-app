@@ -1,0 +1,6 @@
+{
+  "name": "GyanSarthi",
+  "description": "Dynamic education and learning platform launcher catalog powered by Firebase Firestore",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

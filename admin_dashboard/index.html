@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GyanSarthi - Admin Web Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brandDark: '#0B0F19',
+            brandSurface: '#131B2E',
+            brandCard: '#1E293B',
+            brandBorder: '#334155',
+            brandCyan: '#38BDF8',
+            brandIndigo: '#818CF8',
+            brandAmber: '#F59E0B',
+            brandEmerald: '#10B981',
+            brandRose: '#F43F5E'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #0B0F19; color: #F8FAFC; font-family: system-ui, -apple-system, sans-serif; }
+    .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Top Navigation Bar -->
+  <header class="bg-brandSurface border-b border-brandBorder sticky top-0 z-30 px-4 lg:px-8 py-3.5 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brandCyan to-brandIndigo flex items-center justify-center font-bold text-black text-lg shadow-lg shadow-cyan-500/20">
+        GS
+      </div>
+      <div>
+        <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+          GyanSarthi <span class="text-xs px-2 py-0.5 rounded bg-brandCyan/20 text-brandCyan font-semibold border border-brandCyan/30">ADMIN PORTAL</span>
+        </h1>
+        <p class="text-xs text-slate-400">Dynamic Platform & Website Launcher Catalog</p>
+      </div>
+    </div>
+
+    <!-- Right Controls -->
+    <div class="flex items-center gap-3">
+      <button id="firebaseConfigBtn" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-brandBorder transition">
+        ⚙️ Firebase Config
+      </button>
+      <div id="authStatusBadge" class="hidden sm:flex items-center gap-2 text-xs bg-emerald-950/60 text-emerald-400 border border-emerald-800/40 px-3 py-1.5 rounded-lg">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span id="userEmailDisplay">admin@gyansarthi.com</span>
+      </div>
+      <button id="logoutBtn" class="text-xs bg-rose-950/50 hover:bg-rose-900/60 text-rose-300 border border-rose-800/40 px-3 py-1.5 rounded-lg transition hidden">
+        Logout
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 lg:p-8 space-y-6">
+
+    <!-- Firebase Connection Banner -->
+    <div id="statusAlert" class="bg-brandSurface border border-brandBorder rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div id="statusIconBox" class="p-2.5 rounded-xl bg-brandCyan/15 text-brandCyan">
+          ⚡
+        </div>
+        <div>
+          <h2 id="statusTitle" class="text-sm font-semibold text-white">Firestore Live Sync Active</h2>
+          <p id="statusDesc" class="text-xs text-slate-400">Any changes made here appear in users' Android apps instantly in real time.</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 w-full sm:w-auto">
+        <button id="seedDataBtn" class="flex-1 sm:flex-none text-xs bg-brandSurface hover:bg-brandCard text-brandCyan border border-brandCyan/40 px-3.5 py-2 rounded-xl font-medium transition flex items-center justify-center gap-1.5">
+          <span>🌱 Seed Initial 4 Platforms</span>
+        </button>
+        <button id="openAddModalBtn" class="flex-1 sm:flex-none text-xs bg-brandCyan hover:bg-sky-400 text-slate-950 font-bold px-4 py-2 rounded-xl transition flex items-center justify-center gap-1.5 shadow-lg shadow-cyan-500/20">
+          <span>+ Add Platform</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Analytics / Stats Row -->
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4">
+      <div class="bg-brandSurface border border-brandBorder rounded-2xl p-4 flex flex-col justify-between">
+        <div class="flex justify-between items-center text-slate-400 text-xs font-medium">
+          <span>Total Platforms</span>
+          <span class="text-brandCyan text-base">📚</span>
+        </div>
+        <div id="statTotal" class="text-2xl font-black text-white mt-2">0</div>
+      </div>
+      <div class="bg-brandSurface border border-brandBorder rounded-2xl p-4 flex flex-col justify-between">
+        <div class="flex justify-between items-center text-slate-400 text-xs font-medium">
+          <span>Active Portals</span>
+          <span class="text-brandEmerald text-base">🟢</span>
+        </div>
+        <div id="statActive" class="text-2xl font-black text-brandEmerald mt-2">0</div>
+      </div>
+      <div class="bg-brandSurface border border-brandBorder rounded-2xl p-4 flex flex-col justify-between">
+        <div class="flex justify-between items-center text-slate-400 text-xs font-medium">
+          <span>Upcoming</span>
+          <span class="text-brandAmber text-base">⏳</span>
+        </div>
+        <div id="statUpcoming" class="text-2xl font-black text-brandAmber mt-2">0</div>
+      </div>
+      <div class="bg-brandSurface border border-brandBorder rounded-2xl p-4 flex flex-col justify-between">
+        <div class="flex justify-between items-center text-slate-400 text-xs font-medium">
+          <span>With Website</span>
+          <span class="text-brandIndigo text-base">🌐</span>
+        </div>
+        <div id="statWeb" class="text-2xl font-black text-brandIndigo mt-2">0</div>
+      </div>
+      <div class="bg-brandSurface border border-brandBorder rounded-2xl p-4 flex flex-col justify-between col-span-2 md:col-span-1">
+        <div class="flex justify-between items-center text-slate-400 text-xs font-medium">
+          <span>With APK File</span>
+          <span class="text-purple-400 text-base">📦</span>
+        </div>
+        <div id="statApk" class="text-2xl font-black text-purple-400 mt-2">0</div>
+      </div>
+    </div>
+
+    <!-- Search, Filter & Table Card -->
+    <div class="bg-brandSurface border border-brandBorder rounded-2xl p-4 sm:p-6 shadow-xl">
+      <!-- Controls -->
+      <div class="flex flex-col md:flex-row gap-3 justify-between items-stretch md:items-center pb-5 border-b border-brandBorder">
+        <div class="relative flex-1 max-w-md">
+          <input id="searchInput" type="text" placeholder="Search platforms, descriptions, or URLs..."
+            class="w-full bg-slate-900 border border-brandBorder rounded-xl pl-9 pr-4 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brandCyan">
+          <span class="absolute left-3 top-2.5 text-slate-500 text-sm">🔍</span>
+        </div>
+
+        <div class="flex items-center gap-2 overflow-x-auto custom-scroll pb-1 md:pb-0" id="categoryFilterContainer">
+          <button class="cat-chip active text-xs font-semibold px-3 py-1.5 rounded-lg bg-brandCyan text-slate-950 transition" data-category="ALL">All</button>
+          <button class="cat-chip text-xs font-medium px-3 py-1.5 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-brandBorder transition" data-category="Education">Education</button>
+          <button class="cat-chip text-xs font-medium px-3 py-1.5 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-brandBorder transition" data-category="Study">Study</button>
+          <button class="cat-chip text-xs font-medium px-3 py-1.5 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-brandBorder transition" data-category="Courses">Courses</button>
+        </div>
+      </div>
+
+      <!-- Platforms Table -->
+      <div class="overflow-x-auto custom-scroll mt-4">
+        <table class="w-full text-left text-sm border-collapse min-w-[700px]">
+          <thead>
+            <tr class="text-xs font-bold text-slate-400 border-b border-brandBorder uppercase tracking-wider">
+              <th class="py-3 px-3">Order</th>
+              <th class="py-3 px-3">Platform</th>
+              <th class="py-3 px-3">Category</th>
+              <th class="py-3 px-3">Website URL</th>
+              <th class="py-3 px-3">APK</th>
+              <th class="py-3 px-3 text-center">Status</th>
+              <th class="py-3 px-3 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="platformsTableBody" class="divide-y divide-brandBorder/50 text-slate-300">
+            <!-- Dynamic rows injected here -->
+          </tbody>
+        </table>
+        <div id="tableEmptyState" class="hidden text-center py-12 text-slate-500 text-sm">
+          No platforms found matching your criteria.
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Add/Edit Platform Modal -->
+  <div id="platformModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-brandSurface border border-brandBorder w-full max-w-lg rounded-2xl shadow-2xl p-6 overflow-y-auto max-h-[90vh] custom-scroll">
+      <div class="flex items-center justify-between pb-4 border-b border-brandBorder">
+        <h3 id="modalTitle" class="text-base font-bold text-white flex items-center gap-2">
+          <span>➕</span> Add New Platform
+        </h3>
+        <button id="closeModalBtn" class="text-slate-400 hover:text-white text-lg">✕</button>
+      </div>
+
+      <form id="platformForm" class="mt-4 space-y-4 text-sm">
+        <input type="hidden" id="formPlatformId" value="">
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Platform Name *</label>
+          <input type="text" id="formName" required placeholder="e.g. PW Study, AS Multiverse"
+            class="w-full bg-slate-900 border border-brandBorder rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-brandCyan text-sm">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Category *</label>
+          <input type="text" id="formCategory" required placeholder="Education, Study, Courses, Tools"
+            class="w-full bg-slate-900 border border-brandBorder rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-brandCyan text-sm">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Description</label>
+          <textarea id="formDescription" rows="2" placeholder="Brief summary of batches, syllabus & tests"
+            class="w-full bg-slate-900 border border-brandBorder rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-brandCyan text-sm"></textarea>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Website URL *</label>
+          <input type="url" id="formWebsiteUrl" placeholder="https://example.com/study"
+            class="w-full bg-slate-900 border border-brandBorder rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-brandCyan text-sm">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">APK URL (Optional)</label>
+          <input type="url" id="formApkUrl" placeholder="https://example.com/app.apk"
+            class="w-full bg-slate-900 border border-brandBorder rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-brandCyan text-sm">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Logo URL (Optional)</label>
+            <input type="url" id="formLogoUrl" placeholder="https://.../logo.png"
+              class="w-full bg-slate-900 border border-brandBorder rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brandCyan text-xs">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Banner URL (Optional)</label>
+            <input type="url" id="formBannerUrl" placeholder="https://.../banner.jpg"
+              class="w-full bg-slate-900 border border-brandBorder rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brandCyan text-xs">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Display Order (Number)</label>
+          <input type="number" id="formSortOrder" value="1" min="0"
+            class="w-full bg-slate-900 border border-brandBorder rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brandCyan text-sm">
+        </div>
+
+        <div class="flex items-center justify-between p-3 rounded-xl bg-slate-900/80 border border-brandBorder">
+          <div>
+            <span class="block text-xs font-semibold text-white">Active Status</span>
+            <span class="text-[11px] text-slate-400">Visible and launchable in Android app</span>
+          </div>
+          <input type="checkbox" id="formIsActive" checked class="w-4 h-4 accent-brandCyan rounded">
+        </div>
+
+        <div class="flex items-center justify-between p-3 rounded-xl bg-slate-900/80 border border-brandBorder">
+          <div>
+            <span class="block text-xs font-semibold text-white">Upcoming Status</span>
+            <span class="text-[11px] text-slate-400">Show in Upcoming coming soon section</span>
+          </div>
+          <input type="checkbox" id="formIsUpcoming" class="w-4 h-4 accent-brandAmber rounded">
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-4 border-t border-brandBorder">
+          <button type="button" id="cancelModalBtn" class="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white">Cancel</button>
+          <button type="submit" id="savePlatformBtn" class="px-5 py-2 text-xs font-bold rounded-xl bg-brandCyan hover:bg-sky-400 text-slate-950 shadow-lg shadow-cyan-500/20">
+            Save Platform
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Firebase Configuration Modal -->
+  <div id="firebaseConfigModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-brandSurface border border-brandBorder w-full max-w-md rounded-2xl shadow-2xl p-6">
+      <h3 class="text-base font-bold text-white mb-2">Configure Firebase Project</h3>
+      <p class="text-xs text-slate-400 mb-4">Paste your Firebase web config JSON or settings to connect this admin panel directly to your live project.</p>
+
+      <textarea id="firebaseConfigInput" rows="7" placeholder='{
+  "apiKey": "AIzaSy...",
+  "authDomain": "your-app.firebaseapp.com",
+  "projectId": "your-app",
+  "storageBucket": "your-app.appspot.com",
+  "messagingSenderId": "...",
+  "appId": "..."
+}' class="w-full bg-slate-900 border border-brandBorder rounded-xl p-3 text-xs text-slate-200 font-mono focus:outline-none focus:border-brandCyan mb-4"></textarea>
+
+      <div class="flex items-center justify-end gap-3">
+        <button id="closeFirebaseConfigBtn" class="px-3.5 py-1.5 text-xs text-slate-400 hover:text-white">Close</button>
+        <button id="saveFirebaseConfigBtn" class="px-4 py-1.5 text-xs font-bold rounded-xl bg-brandCyan text-slate-950">Save & Connect</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // State
+    const SEED_PLATFORMS = [
+      {
+        id: "pw_study",
+        name: "PW Study",
+        description: "Interactive online study hub featuring structured physics & chemistry lessons, study modules, and test papers.",
+        logoUrl: "",
+        bannerUrl: "",
+        websiteUrl: "https://pwthor.live/study",
+        apkUrl: "",
+        category: "Study",
+        isActive: true,
+        isUpcoming: false,
+        sortOrder: 1
+      },
+      {
+        id: "pw_marco",
+        name: "PW Marco",
+        description: "Dynamic academic revision classroom with chapter-wise video sessions, batch updates, and study material.",
+        logoUrl: "",
+        bannerUrl: "",
+        websiteUrl: "https://pwmarco-og-06656c44b005.herokuapp.com",
+        category: "Education",
+        isActive: true,
+        isUpcoming: false,
+        sortOrder: 2
+      },
+      {
+        id: "as_multiverse",
+        name: "AS Multiverse",
+        description: "Comprehensive multiverse learning portal with full syllabus access, lectures, and interactive study tracks.",
+        logoUrl: "",
+        bannerUrl: "",
+        websiteUrl: "https://asmultiverse.com/?tab=home&app=694690cbe1df5128eacc5caa",
+        category: "Courses",
+        isActive: true,
+        isUpcoming: false,
+        sortOrder: 3
+      },
+      {
+        id: "pw_study_parcham",
+        name: "PW Study Parcham",
+        description: "Specialized exam preparation portal with comprehensive notes, doubt resolution, and recorded course batches.",
+        logoUrl: "",
+        bannerUrl: "",
+        websiteUrl: "https://pw.studyparcham.in/#home-view",
+        category: "Study",
+        isActive: true,
+        isUpcoming: false,
+        sortOrder: 4
+      }
+    ];
+
+    let platforms = [...SEED_PLATFORMS];
+    let selectedCategory = "ALL";
+    let searchQuery = "";
+    let firestoreDb = null;
+
+    // Load from local storage or Firebase
+    const savedConfig = localStorage.getItem("GYANSARTHI_FIREBASE_CONFIG");
+    if (savedConfig) {
+      try {
+        const config = JSON.parse(savedConfig);
+        firebase.initializeApp(config);
+        firestoreDb = firebase.firestore();
+        initFirestoreListener();
+      } catch (e) {
+        console.warn("Could not init firebase with stored config", e);
+      }
+    } else {
+      const stored = localStorage.getItem("GYANSARTHI_LOCAL_PLATFORMS");
+      if (stored) {
+        try { platforms = JSON.parse(stored); } catch(e) {}
+      }
+    }
+
+    function initFirestoreListener() {
+      if (!firestoreDb) return;
+      document.getElementById("statusTitle").innerText = "Connected to Firestore Real-Time";
+      firestoreDb.collection("platforms").onSnapshot((snapshot) => {
+        if (!snapshot.empty) {
+          const list = [];
+          snapshot.forEach(doc => {
+            list.push({ id: doc.id, ...doc.data() });
+          });
+          platforms = list.sort((a,b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+        } else {
+          // If empty, auto seed
+          seedInitialPlatforms();
+        }
+        render();
+      }, (err) => {
+        console.error("Firestore error:", err);
+      });
+    }
+
+    function saveState() {
+      localStorage.setItem("GYANSARTHI_LOCAL_PLATFORMS", JSON.stringify(platforms));
+      render();
+    }
+
+    // Render UI
+    function render() {
+      // Filter
+      const filtered = platforms.filter(p => {
+        const matchCat = selectedCategory === "ALL" || p.category?.toLowerCase() === selectedCategory.toLowerCase();
+        const matchQuery = !searchQuery ||
+          p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          p.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          p.websiteUrl?.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchCat && matchQuery;
+      });
+
+      // Stats
+      document.getElementById("statTotal").innerText = platforms.length;
+      document.getElementById("statActive").innerText = platforms.filter(p => p.isActive).length;
+      document.getElementById("statUpcoming").innerText = platforms.filter(p => p.isUpcoming).length;
+      document.getElementById("statWeb").innerText = platforms.filter(p => p.websiteUrl).length;
+      document.getElementById("statApk").innerText = platforms.filter(p => p.apkUrl).length;
+
+      // Table
+      const tbody = document.getElementById("platformsTableBody");
+      tbody.innerHTML = "";
+
+      if (filtered.length === 0) {
+        document.getElementById("tableEmptyState").classList.remove("hidden");
+      } else {
+        document.getElementById("tableEmptyState").classList.add("hidden");
+      }
+
+      filtered.forEach(p => {
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-800/40 transition group";
+        tr.innerHTML = `
+          <td class="py-3 px-3 font-mono text-xs text-brandCyan">${p.sortOrder || 0}</td>
+          <td class="py-3 px-3">
+            <div class="font-bold text-white text-sm">${escapeHtml(p.name)}</div>
+            <div class="text-xs text-slate-400 line-clamp-1 max-w-xs">${escapeHtml(p.description || '')}</div>
+          </td>
+          <td class="py-3 px-3">
+            <span class="text-xs px-2.5 py-0.5 rounded-full bg-slate-800 text-brandCyan border border-brandBorder font-medium">
+              ${escapeHtml(p.category || 'Education')}
+            </span>
+          </td>
+          <td class="py-3 px-3">
+            <a href="${p.websiteUrl}" target="_blank" class="text-xs text-sky-400 hover:underline max-w-[200px] truncate block">
+              ${escapeHtml(p.websiteUrl || 'None')}
+            </a>
+          </td>
+          <td class="py-3 px-3">
+            ${p.apkUrl ? `<span class="text-[11px] px-2 py-0.5 rounded bg-emerald-950/70 text-emerald-400 border border-emerald-800/40 font-semibold">APK Attached</span>` : `<span class="text-xs text-slate-600">—</span>`}
+          </td>
+          <td class="py-3 px-3 text-center">
+            <div class="flex items-center justify-center gap-1.5">
+              <button onclick="toggleActive('${p.id}')" class="text-xs px-2 py-0.5 rounded font-semibold ${p.isActive ? 'bg-emerald-900/40 text-emerald-400 border border-emerald-700/40' : 'bg-slate-800 text-slate-500'}">
+                ${p.isActive ? 'Active' : 'Off'}
+              </button>
+              ${p.isUpcoming ? `<span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-950/70 text-amber-400 border border-amber-800/40 font-bold">Soon</span>` : ''}
+            </div>
+          </td>
+          <td class="py-3 px-3 text-right">
+            <div class="flex items-center justify-end gap-1">
+              <button onclick="editPlatform('${p.id}')" class="p-1.5 text-slate-400 hover:text-brandCyan rounded hover:bg-slate-800 transition">
+                ✏️
+              </button>
+              <button onclick="deletePlatform('${p.id}')" class="p-1.5 text-slate-400 hover:text-rose-400 rounded hover:bg-slate-800 transition">
+                🗑️
+              </button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+    }
+
+    // Platform actions
+    window.toggleActive = async function(id) {
+      const item = platforms.find(p => p.id === id);
+      if (!item) return;
+      item.isActive = !item.isActive;
+      if (firestoreDb) {
+        try { await firestoreDb.collection("platforms").document(id).set(item, { merge: true }); } catch(e){}
+      }
+      saveState();
+    };
+
+    window.editPlatform = function(id) {
+      const item = platforms.find(p => p.id === id);
+      if (!item) return;
+      document.getElementById("modalTitle").innerHTML = "<span>✏️</span> Edit Platform";
+      document.getElementById("formPlatformId").value = item.id;
+      document.getElementById("formName").value = item.name || "";
+      document.getElementById("formCategory").value = item.category || "Education";
+      document.getElementById("formDescription").value = item.description || "";
+      document.getElementById("formWebsiteUrl").value = item.websiteUrl || "";
+      document.getElementById("formApkUrl").value = item.apkUrl || "";
+      document.getElementById("formLogoUrl").value = item.logoUrl || "";
+      document.getElementById("formBannerUrl").value = item.bannerUrl || "";
+      document.getElementById("formSortOrder").value = item.sortOrder || 1;
+      document.getElementById("formIsActive").checked = item.isActive !== false;
+      document.getElementById("formIsUpcoming").checked = item.isUpcoming === true;
+      document.getElementById("platformModal").classList.remove("hidden");
+    };
+
+    window.deletePlatform = async function(id) {
+      const item = platforms.find(p => p.id === id);
+      if (!item) return;
+      if (confirm(`Are you sure you want to remove '${item.name}'? It will immediately disappear from GyanSarthi.`)) {
+        platforms = platforms.filter(p => p.id !== id);
+        if (firestoreDb) {
+          try { await firestoreDb.collection("platforms").document(id).delete(); } catch(e){}
+        }
+        saveState();
+      }
+    };
+
+    async function seedInitialPlatforms() {
+      for (const s of SEED_PLATFORMS) {
+        const existing = platforms.find(p => p.id === s.id);
+        if (!existing) {
+          platforms.push(s);
+          if (firestoreDb) {
+            try { await firestoreDb.collection("platforms").document(s.id).set(s); } catch(e){}
+          }
+        }
+      }
+      saveState();
+      alert("Seeded 4 initial platforms: PW Study, PW Marco, AS Multiverse & PW Study Parcham!");
+    }
+
+    // Modal Handlers
+    document.getElementById("openAddModalBtn").onclick = () => {
+      document.getElementById("modalTitle").innerHTML = "<span>➕</span> Add New Platform";
+      document.getElementById("formPlatformId").value = "";
+      document.getElementById("platformForm").reset();
+      document.getElementById("formIsActive").checked = true;
+      document.getElementById("formIsUpcoming").checked = false;
+      document.getElementById("formSortOrder").value = (platforms.length + 1);
+      document.getElementById("platformModal").classList.remove("hidden");
+    };
+
+    const closeModal = () => document.getElementById("platformModal").classList.add("hidden");
+    document.getElementById("closeModalBtn").onclick = closeModal;
+    document.getElementById("cancelModalBtn").onclick = closeModal;
+
+    document.getElementById("platformForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const id = document.getElementById("formPlatformId").value || ("plat_" + Date.now());
+      const item = {
+        id: id,
+        name: document.getElementById("formName").value.trim(),
+        category: document.getElementById("formCategory").value.trim() || "Education",
+        description: document.getElementById("formDescription").value.trim(),
+        websiteUrl: document.getElementById("formWebsiteUrl").value.trim(),
+        apkUrl: document.getElementById("formApkUrl").value.trim(),
+        logoUrl: document.getElementById("formLogoUrl").value.trim(),
+        bannerUrl: document.getElementById("formBannerUrl").value.trim(),
+        sortOrder: parseInt(document.getElementById("formSortOrder").value, 10) || 0,
+        isActive: document.getElementById("formIsActive").checked,
+        isUpcoming: document.getElementById("formIsUpcoming").checked,
+        updatedAt: new Date().toISOString()
+      };
+
+      const idx = platforms.findIndex(p => p.id === id);
+      if (idx !== -1) {
+        platforms[idx] = item;
+      } else {
+        item.createdAt = new Date().toISOString();
+        platforms.push(item);
+      }
+
+      if (firestoreDb) {
+        try {
+          await firestoreDb.collection("platforms").document(id).set(item, { merge: true });
+        } catch(err) {
+          console.error("Firestore save error:", err);
+        }
+      }
+
+      saveState();
+      closeModal();
+    };
+
+    document.getElementById("seedDataBtn").onclick = seedInitialPlatforms;
+
+    // Search & Filter
+    document.getElementById("searchInput").oninput = (e) => {
+      searchQuery = e.target.value.trim();
+      render();
+    };
+
+    document.querySelectorAll(".cat-chip").forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll(".cat-chip").forEach(b => {
+          b.classList.remove("active", "bg-brandCyan", "text-slate-950", "font-semibold");
+          b.classList.add("bg-slate-900", "text-slate-400", "font-medium");
+        });
+        btn.classList.add("active", "bg-brandCyan", "text-slate-950", "font-semibold");
+        btn.classList.remove("bg-slate-900", "text-slate-400", "font-medium");
+        selectedCategory = btn.getAttribute("data-category");
+        render();
+      };
+    });
+
+    // Firebase Config Modal
+    document.getElementById("firebaseConfigBtn").onclick = () => {
+      document.getElementById("firebaseConfigModal").classList.remove("hidden");
+    };
+    document.getElementById("closeFirebaseConfigBtn").onclick = () => {
+      document.getElementById("firebaseConfigModal").classList.add("hidden");
+    };
+    document.getElementById("saveFirebaseConfigBtn").onclick = () => {
+      const val = document.getElementById("firebaseConfigInput").value.trim();
+      if (val) {
+        try {
+          JSON.parse(val);
+          localStorage.setItem("GYANSARTHI_FIREBASE_CONFIG", val);
+          location.reload();
+        } catch (e) {
+          alert("Invalid JSON format. Please verify your Firebase config object.");
+        }
+      }
+    };
+
+    render();
+  </script>
+</body>
+</html>

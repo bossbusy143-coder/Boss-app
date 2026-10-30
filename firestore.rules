@@ -1,0 +1,51 @@
+rules_version = "2";
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to verify that the requesting user is an authorized active administrator
+    function isAuthorizedAdmin() {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.enabled == true;
+    }
+
+    // Platforms collection:
+    // Any user (public or authenticated) can read platforms to display them in the app.
+    // ONLY authorized administrators (verified in admins/{uid}) can create, update, or delete.
+    match /platforms/{platformId} {
+      allow read: if true;
+      allow create, update, delete: if isAuthorizedAdmin();
+    }
+
+    // Banners collection:
+    // Normal users can only read enabled banners.
+    // Authorized administrators can read all banners and create, update, or delete.
+    match /banners/{bannerId} {
+      allow read: if resource.data.enabled == true || isAuthorizedAdmin();
+      allow create, update, delete: if isAuthorizedAdmin();
+    }
+
+    // App Configuration & 24H Arolinks Verification rules:
+    // The app can read verification configuration (e.g. active passcode, verification enabled status, shortlink URL)
+    // Only authorized administrators can update or modify verification settings.
+    match /app_config/{configId} {
+      allow read: if true;
+      allow write: if isAuthorizedAdmin();
+    }
+
+    // Device Verification logs & tokens (optional device-level verification sync):
+    // Devices can read and write their own verification state.
+    match /verifications/{deviceId} {
+      allow read, write: if true;
+    }
+
+    // Administrator authorization registry:
+    // Only the authenticated user may read their own admin authorization status.
+    // Writes are blocked from the client app to prevent privilege escalation;
+    // admin records must be assigned directly via the Firebase Console or Admin SDK.
+    match /admins/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
+  }
+}
